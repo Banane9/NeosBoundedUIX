@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.Emit;
 using System.Text;
 using BaseX;
 using CodeX;
@@ -18,14 +19,6 @@ namespace BoundedUIX
 {
     public class BoundedUIX : NeosMod
     {
-        public static ModConfiguration Config;
-
-        //[AutoRegisterConfigKey]
-        //private static ModConfigurationKey<bool> EnableLinkedVariablesList = new ModConfigurationKey<bool>("EnableLinkedVariablesList", "Allow generating a list of dynamic variable definitions for a space.", () => true);
-
-        //[AutoRegisterConfigKey]
-        //private static ModConfigurationKey<bool> EnableVariableHierarchy = new ModConfigurationKey<bool>("EnableVariableHierarchy", "Allow generating a hierarchy of dynamic variable components for a space.", () => true);
-
         public override string Author => "Banane9";
         public override string Link => "https://github.com/Banane9/NeosBoundedUIX";
         public override string Name => "BoundedUIX";
@@ -34,35 +27,44 @@ namespace BoundedUIX
         public override void OnEngineInit()
         {
             Harmony harmony = new Harmony($"{Author}.{Name}");
-            //Config = GetConfiguration();
-            //Config.Save(true);
             harmony.PatchAll();
         }
 
-        [HarmonyPatch(typeof(BoundsHelper))]
-        private static class BoundsHelperPatches
+        [HarmonyPatch(typeof(SlotGizmo))]
+        private static class SlotGizmoPatches
         {
-            [HarmonyPostfix]
-            [HarmonyPatch("EncapsulateBoundingBox")]
-            private static void EncapsulateBoundingBoxPostfix(Slot slot, ref BoundingBox bounds, bool includeInactive, Slot space, Predicate<Slot> searchBlock)
+            private static readonly MethodInfo boundUIXMethod = typeof(SlotGizmoPatches).GetMethod(nameof(BoundUIX), AccessTools.allDeclared);
+
+            private static readonly MethodInfo computeBoundingBoxMethod = typeof(BoundsHelper).GetMethod("ComputeBoundingBox", AccessTools.allDeclared);
+
+            private static BoundingBox BoundUIX(BoundingBox bounds, Slot target, Slot space)
             {
-                if ((!includeInactive && !slot.IsActive)
-                 || (searchBlock != null && !searchBlock(slot))
-                 || !(slot.GetComponent<RectTransform>() is RectTransform rect))
-                    return;
+                if (!(target.GetComponent<RectTransform>() is RectTransform rect))
+                    return bounds;
 
-                var offset = rect.Canvas.Size.Value / 2f;
-                var min = slot.LocalPointToGlobal(rect.LocalComputeRect.ExtentMin - offset);
-                var max = slot.LocalPointToGlobal(rect.LocalComputeRect.ExtentMax - offset);
+                var area = rect.ComputeGlobalComputeRect();
+                bounds.Encapsulate(space.GlobalPointToLocal(rect.Canvas.Slot.LocalPointToGlobal(area.ExtentMin)));
+                bounds.Encapsulate(space.GlobalPointToLocal(rect.Canvas.Slot.LocalPointToGlobal(area.ExtentMax)));
 
-                if (space != null)
-                {
-                    min = space.GlobalPointToLocal(min);
-                    max = space.GlobalPointToLocal(max);
-                }
+                return bounds;
+            }
 
-                bounds.Encapsulate(min);
-                bounds.Encapsulate(max);
+            [HarmonyTranspiler]
+            [HarmonyPatch("OnCommonUpdate")]
+            private static IEnumerable<CodeInstruction> OnCommonUpdateTranspiler(IEnumerable<CodeInstruction> codeInstructions)
+            {
+                var instructions = codeInstructions.ToList();
+
+                var computeIndex = instructions.FindIndex(instruction => instruction.Calls(computeBoundingBoxMethod));
+
+                if (computeIndex < 0)
+                    return instructions;
+
+                instructions.Insert(computeIndex + 1, instructions[computeIndex - 5]);
+                instructions.Insert(computeIndex + 2, instructions[computeIndex - 3]);
+                instructions.Insert(computeIndex + 3, new CodeInstruction(OpCodes.Call, boundUIXMethod));
+
+                return instructions;
             }
         }
     }
