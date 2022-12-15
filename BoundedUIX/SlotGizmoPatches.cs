@@ -18,12 +18,12 @@ namespace BoundedUIX
 
         private static BoundingBox BoundUIX(BoundingBox bounds, Slot target, Slot space)
         {
-            if (!(target.GetComponent<RectTransform>() is RectTransform rect))
+            if (!target.TryGetMovableRectTransform(out var rectTransform))
                 return bounds;
 
-            var area = rect.ComputeGlobalComputeRect();
-            bounds.Encapsulate(space.GlobalPointToLocal(rect.Canvas.Slot.LocalPointToGlobal(area.ExtentMin)));
-            bounds.Encapsulate(space.GlobalPointToLocal(rect.Canvas.Slot.LocalPointToGlobal(area.ExtentMax)));
+            var area = rectTransform.ComputeGlobalComputeRect();
+            bounds.Encapsulate(space.GlobalPointToLocal(rectTransform.Canvas.Slot.LocalPointToGlobal(area.ExtentMin / rectTransform.Canvas.UnitScale)));
+            bounds.Encapsulate(space.GlobalPointToLocal(rectTransform.Canvas.Slot.LocalPointToGlobal(area.ExtentMax / rectTransform.Canvas.UnitScale)));
 
             return bounds;
         }
@@ -47,6 +47,16 @@ namespace BoundedUIX
         }
 
         [HarmonyPostfix]
+        [HarmonyPatch("Setup")]
+        private static void SetupPostfix(TransformRelayRef ____targetSlot, Sync<bool> ____isLocalSpace)
+        {
+            if (!____targetSlot.Target.TryGetMovableRectTransform(out var rectTransform))
+                return;
+
+            rectTransform.GetOriginal().Local = ____isLocalSpace.Value;
+        }
+
+        [HarmonyPostfix]
         [HarmonyPatch("SwitchSpace")]
         private static void SwitchSpacePostfix(TransformRelayRef ____targetSlot, Sync<bool> ____isLocalSpace, SyncRef<Slot> ____buttonsSlot, ref bool __state)
         {
@@ -55,7 +65,7 @@ namespace BoundedUIX
 
             // Restore true state to show the different icon
             ____isLocalSpace.Value = __state;
-            BoundedUIX.OriginalRects.GetOrCreateValue(rectTransform).Local = __state;
+            rectTransform.GetOriginal().Local = __state;
             ____buttonsSlot.Target.FindInChildren("LocalSpaceIcon").ActiveSelf = __state;
             ____buttonsSlot.Target.FindInChildren("GlobalSpaceIcon").ActiveSelf = __state;
         }

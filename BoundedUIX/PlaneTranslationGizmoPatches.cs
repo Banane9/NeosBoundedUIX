@@ -6,12 +6,12 @@ using HarmonyLib;
 
 namespace BoundedUIX
 {
-    [HarmonyPatch(typeof(AxisTranslationGizmo))]
-    internal static class AxisTranslationGizmoPatches
+    [HarmonyPatch(typeof(PlaneTranslationGizmo))]
+    internal static class PlaneTranslationGizmoPatches
     {
         [HarmonyPostfix]
         [HarmonyPatch("OnInteractionBegin")]
-        private static void OnInteractionBeginPostfix(AxisTranslationGizmo __instance)
+        private static void OnInteractionBeginPostfix(PlaneTranslationGizmo __instance)
         {
             if (!__instance.TargetSlot.Target.TryGetMovableRectTransform(out RectTransform rectTransform))
                 return;
@@ -33,7 +33,7 @@ namespace BoundedUIX
 
         [HarmonyPostfix]
         [HarmonyPatch("UpdatePoint")]
-        private static void UpdatePointPostfix(AxisTranslationGizmo __instance)
+        private static void UpdatePointPostfix(PlaneTranslationGizmo __instance)
         {
             var targetSlot = __instance.TargetSlot.Target;
             if (!targetSlot.TryGetMovableRectTransform(out var rectTransform))

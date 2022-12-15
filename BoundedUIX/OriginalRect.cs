@@ -10,7 +10,9 @@ namespace BoundedUIX
         public bool Local { get; set; }
         public float2 OffsetMax { get; private set; }
         public float2 OffsetMin { get; private set; }
-        public float2 Position { get; private set; }
+        public float3 Position { get; private set; }
+        public float3 Scale { get; private set; }
+        public float2 Size { get; private set; }
 
         public void Update(RectTransform rectTransform)
         {
@@ -18,7 +20,9 @@ namespace BoundedUIX
             AnchorMax = rectTransform.AnchorMax;
             OffsetMin = rectTransform.OffsetMin;
             OffsetMax = rectTransform.OffsetMax;
-            Position = rectTransform.Slot.LocalPosition.xy;
+            Position = rectTransform.Slot.LocalPosition;
+            Scale = rectTransform.Slot.LocalScale;
+            Size = rectTransform.ComputeGlobalComputeRect().size;
         }
     }
 }

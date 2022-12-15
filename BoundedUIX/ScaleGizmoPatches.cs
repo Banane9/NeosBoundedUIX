@@ -6,12 +6,12 @@ using HarmonyLib;
 
 namespace BoundedUIX
 {
-    [HarmonyPatch(typeof(AxisTranslationGizmo))]
-    internal static class AxisTranslationGizmoPatches
+    [HarmonyPatch(typeof(ScaleGizmo))]
+    internal static class ScaleGizmoPatches
     {
         [HarmonyPostfix]
         [HarmonyPatch("OnInteractionBegin")]
-        private static void OnInteractionBeginPostfix(AxisTranslationGizmo __instance)
+        private static void OnInteractionBeginPostfix(ScaleGizmo __instance)
         {
             if (!__instance.TargetSlot.Target.TryGetMovableRectTransform(out RectTransform rectTransform))
                 return;
@@ -33,20 +33,20 @@ namespace BoundedUIX
 
         [HarmonyPostfix]
         [HarmonyPatch("UpdatePoint")]
-        private static void UpdatePointPostfix(AxisTranslationGizmo __instance)
+        private static void UpdatePointPostfix(ScaleGizmo __instance)
         {
             var targetSlot = __instance.TargetSlot.Target;
             if (!targetSlot.TryGetMovableRectTransform(out var rectTransform))
                 return;
 
             var originalRect = rectTransform.GetOriginal();
-            var translationOffset = (targetSlot.LocalPosition - originalRect.Position).xy;
+            var scale = (targetSlot.LocalScale - originalRect.Scale).xy;
+            var pxOffset = scale * originalRect.Size / 2f;
 
-            var pxOffset = rectTransform.Canvas.UnitScale.Value * translationOffset;
             if (originalRect.Local)
             {
                 if (rectTransform.OffsetMin.CanSet())
-                    rectTransform.OffsetMin.Value = originalRect.OffsetMin + pxOffset;
+                    rectTransform.OffsetMin.Value = originalRect.OffsetMin - pxOffset;
 
                 if (rectTransform.OffsetMax.CanSet())
                     rectTransform.OffsetMax.Value = originalRect.OffsetMax + pxOffset;
@@ -56,14 +56,14 @@ namespace BoundedUIX
                 var anchorOffset = pxOffset / rectTransform.RectParent.ComputeGlobalComputeRect().size;
 
                 if (rectTransform.AnchorMin.CanSet())
-                    rectTransform.AnchorMin.Value = originalRect.AnchorMin + anchorOffset;
+                    rectTransform.AnchorMin.Value = originalRect.AnchorMin - anchorOffset;
 
                 if (rectTransform.AnchorMax.CanSet())
                     rectTransform.AnchorMax.Value = originalRect.AnchorMax + anchorOffset;
             }
 
-            // Reset slot position
-            targetSlot.LocalPosition = originalRect.Position;
+            // Reset slot scale
+            targetSlot.LocalScale = originalRect.Scale;
         }
     }
 }
