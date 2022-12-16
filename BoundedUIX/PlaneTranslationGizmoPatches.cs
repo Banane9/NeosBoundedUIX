@@ -31,39 +31,47 @@ namespace BoundedUIX
             }
         }
 
-        [HarmonyPostfix]
+        [HarmonyPrefix]
         [HarmonyPatch("UpdatePoint")]
-        private static void UpdatePointPostfix(PlaneTranslationGizmo __instance)
+        private static bool UpdatePointPrefix(PlaneTranslationGizmo __instance, float3 localPoint, float3 ____pointOffset, SyncRef<SegmentMesh> ____line0, SyncRef<SegmentMesh> ____line1)
         {
             var targetSlot = __instance.TargetSlot.Target;
             if (!targetSlot.TryGetMovableRectTransform(out var rectTransform))
-                return;
+                return true;
 
+            var offsetPoint = localPoint - ____pointOffset;
+            var projectedPoint = MathX.Reject(offsetPoint, __instance.LocalNormal);
+            projectedPoint = __instance.Slot.LocalPointToGlobal(projectedPoint);
+            projectedPoint = __instance.PointSpace.Space.GlobalPointToLocal(projectedPoint);
             var originalRect = rectTransform.GetOriginal();
-            var translationOffset = (targetSlot.LocalPosition - originalRect.Position).xy;
+            var translationOffset = (projectedPoint - __instance.PointSpace.Space.GlobalPointToLocal(originalRect.Center)).xy;
 
             var pxOffset = rectTransform.Canvas.UnitScale.Value * translationOffset;
             if (originalRect.Local)
             {
                 if (rectTransform.OffsetMin.CanSet())
-                    rectTransform.OffsetMin.Value = originalRect.OffsetMin + pxOffset;
+                    rectTransform.OffsetMin.Value += pxOffset;
 
                 if (rectTransform.OffsetMax.CanSet())
-                    rectTransform.OffsetMax.Value = originalRect.OffsetMax + pxOffset;
+                    rectTransform.OffsetMax.Value += pxOffset;
             }
             else
             {
                 var anchorOffset = pxOffset / rectTransform.RectParent.ComputeGlobalComputeRect().size;
 
                 if (rectTransform.AnchorMin.CanSet())
-                    rectTransform.AnchorMin.Value = originalRect.AnchorMin + anchorOffset;
+                    rectTransform.AnchorMin.Value += anchorOffset;
 
                 if (rectTransform.AnchorMax.CanSet())
-                    rectTransform.AnchorMax.Value = originalRect.AnchorMax + anchorOffset;
+                    rectTransform.AnchorMax.Value += anchorOffset;
             }
 
-            // Reset slot position
-            targetSlot.LocalPosition = originalRect.Position;
+            var line = MathX.Project(localPoint, __instance.LocalNormal);
+            ____line0.Target.PointB.Value = line;
+            ____line1.Target.PointA.Value = line;
+            ____line1.Target.PointB.Value = float3.Zero;
+
+            return false;
         }
     }
 }

@@ -9,20 +9,6 @@ namespace BoundedUIX
     [HarmonyPatch(typeof(AxisTranslationGizmo))]
     internal static class AxisTranslationGizmoPatches
     {
-        //[HarmonyPostfix]
-        //[HarmonyPatch("ComputePointWithOffset")]
-        //private static void ComputePointWithOffsetPostfix(AxisTranslationGizmo __instance, ref float3 __result)
-        //{
-        //    if (!__instance.TargetSlot.Target.TryGetMovableRectTransform(out RectTransform rectTransform))
-        //        return;
-
-        //    BoundedUIX.Msg("Original Point: " + __result + " with " + rectTransform.GetOriginal().Center);
-
-        //    __result -= __instance.TargetSlot.Slot.GlobalPointToLocal(rectTransform.GetOriginal().Center);
-
-        //    BoundedUIX.Msg("New Point: " + __result);
-        //}
-
         [HarmonyPostfix]
         [HarmonyPatch("OnInteractionBegin")]
         private static void OnInteractionBeginPostfix(AxisTranslationGizmo __instance)

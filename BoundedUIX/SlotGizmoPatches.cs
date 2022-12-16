@@ -81,7 +81,9 @@ namespace BoundedUIX
             if (____scaleGizmo.Target.TryGetField("_zSlot") is SyncRef<Slot> zSlot)
                 zSlot.Target.ActiveSelf = !moveableRect;
 
-            ____scaleGizmo.Slot.GetComponents<MeshRenderer>().Last().Enabled = !moveableRect;
+            // Hide blue z line of the gizmo
+            if (____scaleGizmo.Target.Slot.GetComponent<MeshRenderer>(r => r.Materials[0] is OverlayFresnelMaterial material && material.FrontNearColor == color.Blue) is MeshRenderer renderer)
+                renderer.Enabled = !moveableRect;
         }
 
         [HarmonyPostfix]
