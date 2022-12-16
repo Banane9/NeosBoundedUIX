@@ -19,6 +19,8 @@ namespace BoundedUIX
             var originalTransform = rectTransform.GetOriginal();
             originalTransform.Update(rectTransform);
 
+            __instance.World.BeginUndoBatch("Undo.TranslateAlongAxis".AsLocaleKey());
+
             if (originalTransform.Local)
             {
                 rectTransform.OffsetMin.CreateUndoPoint(true);
@@ -29,6 +31,8 @@ namespace BoundedUIX
                 rectTransform.AnchorMin.CreateUndoPoint(true);
                 rectTransform.AnchorMax.CreateUndoPoint(true);
             }
+
+            __instance.World.EndUndoBatch();
         }
 
         [HarmonyPrefix]

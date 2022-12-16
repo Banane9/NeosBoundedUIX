@@ -3,6 +3,7 @@ using FrooxEngine;
 using FrooxEngine.UIX;
 using FrooxEngine.Undo;
 using HarmonyLib;
+using System.Runtime.CompilerServices;
 
 namespace BoundedUIX
 {
@@ -13,11 +14,13 @@ namespace BoundedUIX
         [HarmonyPatch("OnInteractionBegin")]
         private static void OnInteractionBeginPostfix(PlaneTranslationGizmo __instance)
         {
-            if (!__instance.TargetSlot.Target.TryGetMovableRectTransform(out RectTransform rectTransform))
+            if (!__instance.TargetSlot.Target.TryGetMovableRectTransform(out var rectTransform))
                 return;
 
             var originalTransform = rectTransform.GetOriginal();
             originalTransform.Update(rectTransform);
+
+            __instance.World.BeginUndoBatch("Undo.TranslateAlongAxis".AsLocaleKey());
 
             if (originalTransform.Local)
             {
@@ -29,6 +32,8 @@ namespace BoundedUIX
                 rectTransform.AnchorMin.CreateUndoPoint(true);
                 rectTransform.AnchorMax.CreateUndoPoint(true);
             }
+
+            __instance.World.EndUndoBatch();
         }
 
         [HarmonyPrefix]
