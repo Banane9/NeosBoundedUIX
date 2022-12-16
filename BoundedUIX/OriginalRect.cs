@@ -7,6 +7,7 @@ namespace BoundedUIX
     {
         public float2 AnchorMax { get; private set; }
         public float2 AnchorMin { get; private set; }
+        public float3 Center { get; set; }
         public bool Local { get; set; }
         public float2 OffsetMax { get; private set; }
         public float2 OffsetMin { get; private set; }

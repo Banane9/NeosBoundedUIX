@@ -18,7 +18,7 @@ namespace BoundedUIX
         {
             var area = rectTransform.ComputeGlobalComputeRect();
 
-            var bounds = new BoundingBox();
+            var bounds = BoundingBox.Empty();
             bounds.Encapsulate(rectTransform.Canvas.Slot.LocalPointToGlobal(area.ExtentMin / rectTransform.Canvas.UnitScale));
             bounds.Encapsulate(rectTransform.Canvas.Slot.LocalPointToGlobal(area.ExtentMax / rectTransform.Canvas.UnitScale));
 

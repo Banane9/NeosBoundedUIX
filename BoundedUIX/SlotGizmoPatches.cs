@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -15,6 +16,11 @@ namespace BoundedUIX
         private static readonly MethodInfo boundUIXMethod = typeof(SlotGizmoPatches).GetMethod(nameof(BoundUIX), AccessTools.allDeclared);
 
         private static readonly MethodInfo computeBoundingBoxMethod = typeof(BoundsHelper).GetMethod("ComputeBoundingBox", AccessTools.allDeclared);
+
+        private static readonly MethodInfo getGlobalPositionMethod = typeof(Slot).GetProperty(nameof(Slot.GlobalPosition), AccessTools.allDeclared).GetMethod;
+
+        private static readonly Type RotationGizmoType = typeof(RotationGizmo);
+        private static readonly MethodInfo uixBoundCenterMethod = typeof(SlotGizmoPatches).GetMethod(nameof(UIXBoundCenter), AccessTools.allDeclared);
 
         private static BoundingBox BoundUIX(BoundingBox bounds, Slot target, Slot space)
         {
@@ -34,7 +40,14 @@ namespace BoundedUIX
         {
             var instructions = codeInstructions.ToList();
 
-            var computeIndex = instructions.FindIndex(instruction => instruction.Calls(computeBoundingBoxMethod));
+            var globalPositionIndex = instructions.FindIndex(instruction => instruction.Calls(getGlobalPositionMethod));
+
+            if (globalPositionIndex < 0)
+                return instructions;
+
+            instructions[globalPositionIndex] = new CodeInstruction(OpCodes.Call, uixBoundCenterMethod);
+
+            var computeIndex = instructions.FindIndex(globalPositionIndex, instruction => instruction.Calls(computeBoundingBoxMethod));
 
             if (computeIndex < 0)
                 return instructions;
@@ -47,13 +60,28 @@ namespace BoundedUIX
         }
 
         [HarmonyPostfix]
-        [HarmonyPatch("Setup")]
-        private static void SetupPostfix(TransformRelayRef ____targetSlot, Sync<bool> ____isLocalSpace)
+        [HarmonyPatch("RegenerateButtons")]
+        private static void RegenerateButtonsPostfix(SlotGizmo __instance, SyncRef<Slot> ____buttonsSlot)
         {
-            if (!____targetSlot.Target.TryGetMovableRectTransform(out var rectTransform))
-                return;
+            var moveableRect = __instance.TargetSlot.TryGetMovableRectTransform(out _);
 
-            rectTransform.GetOriginal().Local = ____isLocalSpace.Value;
+            if (____buttonsSlot.Target.GetComponentInChildren<SlotGizmoButton>(button => ((SyncRef<Worker>)button.TryGetField("_worker")).Target?.GetType() == RotationGizmoType) is SlotGizmoButton sgb)
+                sgb.Slot.ActiveSelf = !moveableRect;
+        }
+
+        [HarmonyPostfix]
+        [HarmonyPatch("Setup")]
+        private static void SetupPostfix(TransformRelayRef ____targetSlot, Sync<bool> ____isLocalSpace, SyncRef<ScaleGizmo> ____scaleGizmo)
+        {
+            var moveableRect = ____targetSlot.Target.TryGetMovableRectTransform(out var rectTransform);
+
+            if (moveableRect)
+                rectTransform.GetOriginal().Local = ____isLocalSpace.Value;
+
+            if (____scaleGizmo.Target.TryGetField("_zSlot") is SyncRef<Slot> zSlot)
+                zSlot.Target.ActiveSelf = !moveableRect;
+
+            ____scaleGizmo.Slot.GetComponents<MeshRenderer>().Last().Enabled = !moveableRect;
         }
 
         [HarmonyPostfix]
@@ -67,7 +95,7 @@ namespace BoundedUIX
             ____isLocalSpace.Value = __state;
             rectTransform.GetOriginal().Local = __state;
             ____buttonsSlot.Target.FindInChildren("LocalSpaceIcon").ActiveSelf = __state;
-            ____buttonsSlot.Target.FindInChildren("GlobalSpaceIcon").ActiveSelf = __state;
+            ____buttonsSlot.Target.FindInChildren("GlobalSpaceIcon").ActiveSelf = !__state;
         }
 
         [HarmonyPrefix]
@@ -80,6 +108,14 @@ namespace BoundedUIX
             // Always let it set local space for the translation gizmos on rect transforms
             __state = !____isLocalSpace.Value;
             ____isLocalSpace.Value = false;
+        }
+
+        private static float3 UIXBoundCenter(Slot target)
+        {
+            if (!target.TryGetMovableRectTransform(out var rectTransform))
+                return target.GlobalPosition;
+
+            return rectTransform.GetGlobalBounds().Center - .1f * rectTransform.Canvas.Slot.Forward;
         }
     }
 }

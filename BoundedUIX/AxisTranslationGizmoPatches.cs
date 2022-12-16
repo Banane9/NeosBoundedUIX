@@ -9,6 +9,20 @@ namespace BoundedUIX
     [HarmonyPatch(typeof(AxisTranslationGizmo))]
     internal static class AxisTranslationGizmoPatches
     {
+        //[HarmonyPostfix]
+        //[HarmonyPatch("ComputePointWithOffset")]
+        //private static void ComputePointWithOffsetPostfix(AxisTranslationGizmo __instance, ref float3 __result)
+        //{
+        //    if (!__instance.TargetSlot.Target.TryGetMovableRectTransform(out RectTransform rectTransform))
+        //        return;
+
+        //    BoundedUIX.Msg("Original Point: " + __result + " with " + rectTransform.GetOriginal().Center);
+
+        //    __result -= __instance.TargetSlot.Slot.GlobalPointToLocal(rectTransform.GetOriginal().Center);
+
+        //    BoundedUIX.Msg("New Point: " + __result);
+        //}
+
         [HarmonyPostfix]
         [HarmonyPatch("OnInteractionBegin")]
         private static void OnInteractionBeginPostfix(AxisTranslationGizmo __instance)
@@ -31,39 +45,52 @@ namespace BoundedUIX
             }
         }
 
-        [HarmonyPostfix]
+        [HarmonyPrefix]
         [HarmonyPatch("UpdatePoint")]
-        private static void UpdatePointPostfix(AxisTranslationGizmo __instance)
+        private static bool UpdatePointPrefix(AxisTranslationGizmo __instance, float3 localPoint, float3 ____pointOffset, SyncRef<SegmentMesh> ____line0, SyncRef<SegmentMesh> ____line1)
         {
             var targetSlot = __instance.TargetSlot.Target;
             if (!targetSlot.TryGetMovableRectTransform(out var rectTransform))
-                return;
+                return true;
 
+            var offsetPoint = localPoint - ____pointOffset;
+            var projectedPoint = MathX.Project(offsetPoint, __instance.LocalAxis);
+            projectedPoint = __instance.Slot.LocalPointToGlobal(projectedPoint);
+            projectedPoint = __instance.PointSpace.Space.GlobalPointToLocal(projectedPoint);
             var originalRect = rectTransform.GetOriginal();
-            var translationOffset = (targetSlot.LocalPosition - originalRect.Position).xy;
+            var translationOffset = (projectedPoint - __instance.PointSpace.Space.GlobalPointToLocal(originalRect.Center)).xy;
+
+            if (__instance.TargetValue.Target != null)
+            {
+                __instance.TargetValue.Target.Value = translationOffset.Magnitude;
+            }
 
             var pxOffset = rectTransform.Canvas.UnitScale.Value * translationOffset;
             if (originalRect.Local)
             {
                 if (rectTransform.OffsetMin.CanSet())
-                    rectTransform.OffsetMin.Value = originalRect.OffsetMin + pxOffset;
+                    rectTransform.OffsetMin.Value += pxOffset;
 
                 if (rectTransform.OffsetMax.CanSet())
-                    rectTransform.OffsetMax.Value = originalRect.OffsetMax + pxOffset;
+                    rectTransform.OffsetMax.Value += pxOffset;
             }
             else
             {
                 var anchorOffset = pxOffset / rectTransform.RectParent.ComputeGlobalComputeRect().size;
 
                 if (rectTransform.AnchorMin.CanSet())
-                    rectTransform.AnchorMin.Value = originalRect.AnchorMin + anchorOffset;
+                    rectTransform.AnchorMin.Value += anchorOffset;
 
                 if (rectTransform.AnchorMax.CanSet())
-                    rectTransform.AnchorMax.Value = originalRect.AnchorMax + anchorOffset;
+                    rectTransform.AnchorMax.Value += anchorOffset;
             }
 
-            // Reset slot position
-            targetSlot.LocalPosition = originalRect.Position;
+            var line = MathX.Reject(localPoint, __instance.LocalAxis);
+            ____line0.Target.PointB.Value = line;
+            ____line1.Target.PointA.Value = line;
+            ____line1.Target.PointB.Value = float3.Zero;
+
+            return false;
         }
     }
 }
