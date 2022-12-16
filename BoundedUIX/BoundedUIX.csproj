@@ -59,6 +59,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DevToolTipPatches.cs" />
     <Compile Include="GizmoPatches.cs" />
     <Compile Include="PlaneTranslationGizmoPatches.cs" />
     <Compile Include="ScaleGizmoPatches.cs" />
