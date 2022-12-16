@@ -1,7 +1,8 @@
 Bounded UIX
 ===========
 
-A [NeosModLoader](https://github.com/zkxs/NeosModLoader) mod for [Neos VR](https://neos.com/) that adds selection gizmo bounding boxes to UIX elements. 
+A [NeosModLoader](https://github.com/zkxs/NeosModLoader) mod for [Neos VR](https://neos.com/) that makes UIX elements editable with the usual Slot gizmos,
+as well as fixing UIX elements breaking when a parent is inserted.
 
 ## Installation
 1. Install [NeosModLoader](https://github.com/zkxs/NeosModLoader).
