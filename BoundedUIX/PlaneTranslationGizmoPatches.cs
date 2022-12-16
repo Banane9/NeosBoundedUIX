@@ -22,7 +22,7 @@ namespace BoundedUIX
 
             __instance.World.BeginUndoBatch("Undo.TranslateAlongAxis".AsLocaleKey());
 
-            if (originalTransform.Local)
+            if (!originalTransform.Local)
             {
                 rectTransform.OffsetMin.CreateUndoPoint(true);
                 rectTransform.OffsetMax.CreateUndoPoint(true);
@@ -52,7 +52,7 @@ namespace BoundedUIX
             var translationOffset = (projectedPoint - __instance.PointSpace.Space.GlobalPointToLocal(originalRect.Center)).xy;
 
             var pxOffset = rectTransform.Canvas.UnitScale.Value * translationOffset;
-            if (originalRect.Local)
+            if (!originalRect.Local)
             {
                 if (rectTransform.OffsetMin.CanSet())
                     rectTransform.OffsetMin.Value += pxOffset;

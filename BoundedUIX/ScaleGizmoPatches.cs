@@ -21,7 +21,7 @@ namespace BoundedUIX
 
             __instance.World.BeginUndoBatch("Scale Element");
 
-            if (originalTransform.Local)
+            if (!originalTransform.Local)
             {
                 rectTransform.OffsetMin.CreateUndoPoint(true);
                 rectTransform.OffsetMax.CreateUndoPoint(true);
@@ -47,7 +47,7 @@ namespace BoundedUIX
             var scale = (targetSlot.LocalScale - originalRect.Scale).xy;
             var pxOffset = scale * originalRect.Size / 2f;
 
-            if (originalRect.Local)
+            if (!originalRect.Local)
             {
                 if (rectTransform.OffsetMin.CanSet())
                     rectTransform.OffsetMin.Value = originalRect.OffsetMin - pxOffset;
