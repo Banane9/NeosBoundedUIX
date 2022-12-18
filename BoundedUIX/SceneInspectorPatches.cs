@@ -22,7 +22,7 @@ namespace BoundedUIX
 
             var slot = target.AddSlot(target.Name + " - Child", true);
 
-            if (target.TryGetMovableRectTransform(out _))
+            if (target.TryGetRectTransform(out _))
             {
                 slot.Name = "Panel";
                 slot.AttachComponent<RectTransform>();

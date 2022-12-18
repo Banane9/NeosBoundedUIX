@@ -29,8 +29,11 @@ namespace BoundedUIX
                     => originalRects.GetOrCreateValue(rectTransform);
 
         public static bool TryGetMovableRectTransform(this Slot slot, out RectTransform rectTransform)
+            => slot.TryGetRectTransform(out rectTransform) && rectTransform.Slot != rectTransform.Canvas.Slot;
+
+        public static bool TryGetRectTransform(this Slot slot, out RectTransform rectTransform)
         {
-            if (slot?.GetComponent<RectTransform>() is RectTransform rt && rt.Canvas != null && rt.Slot != rt.Canvas.Slot)
+            if (slot?.GetComponent<RectTransform>() is RectTransform rt && rt.Canvas != null)
             {
                 rectTransform = rt;
                 return true;
