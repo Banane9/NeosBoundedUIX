@@ -13,8 +13,10 @@ namespace BoundedUIX
     [HarmonyPatch(typeof(DevToolTip))]
     internal static class DevToolTipPatches
     {
-        private static MethodInfo checkCanvasHitMethod = typeof(DevToolTipPatches).GetMethod(nameof(CheckCanvas), AccessTools.allDeclared);
-        private static FieldInfo colliderField = typeof(RaycastHit).GetField("Collider", AccessTools.allDeclared);
+        private static readonly MethodInfo checkCanvasHitMethod = typeof(DevToolTipPatches).GetMethod(nameof(CheckCanvas), AccessTools.allDeclared);
+        private static readonly FieldInfo colliderField = typeof(RaycastHit).GetField("Collider", AccessTools.allDeclared);
+
+        private static readonly FieldInfo graphicField = typeof(RectTransform).GetField("_graphic", AccessTools.allDeclared);
 
         private static Slot CheckCanvas(RaycastHit hit)
         {
@@ -22,7 +24,7 @@ namespace BoundedUIX
 
             if (best?.GetComponent<Canvas>() != null && best?.GetComponent<RectTransform>() is RectTransform rectTransform)
             {
-                best = FindBestFittingRect(hit.Point, best, rectTransform.GetGlobalBounds(), out _);
+                best = FindBestRect(hit.Point, best);
 
                 if (best.GetComponentInParents<Button>() is Button button && button.Slot.HierachyDepth > rectTransform.Slot.HierachyDepth)
                     best = button.Slot;
@@ -31,30 +33,30 @@ namespace BoundedUIX
             return best;
         }
 
-        private static Slot FindBestFittingRect(float3 hitPoint, Slot currentRoot, BoundingBox currentBounds, out RectTransform bestRect)
+        private static Slot FindBestRect(float3 hitPoint, Slot root)
         {
-            var best = currentRoot;
-            currentRoot.TryGetRectTransform(out bestRect);
-            var bestSize = bestRect.LocalComputeRect.size.GetArea();
+            var traversal = new Stack<Slot>();
+            traversal.Push(root);
 
-            foreach (var child in currentRoot.Children)
+            Slot best = null;
+            while (traversal.Count > 0)
             {
-                if (!child.TryGetRectTransform(out RectTransform rectTransform))
+                var current = traversal.Pop();
+
+                if (!current.TryGetRectTransform(out var rectTransform))
                     continue;
 
-                var bounds = rectTransform.GetGlobalBounds();
-                if (!bounds.Contains(hitPoint))
+                var isHit = rectTransform.GetGlobalBounds().Contains(hitPoint);
+                var hasGraphic = graphicField.GetValue(rectTransform) != null;
+
+                if (isHit && hasGraphic && (!rectTransform.IsMask || rectTransform.IsMaskVisible))
+                    best = current;
+
+                if (rectTransform.IsMask && (!isHit || !hasGraphic))
                     continue;
 
-                var foundBest = FindBestFittingRect(hitPoint, child, child.GetComponent<Mask>() != null ? rectTransform.GetGlobalBounds() : currentBounds, out var foundBestRect);
-                var foundBestSize = foundBestRect.LocalComputeRect.size.GetArea();
-
-                if (foundBestSize < bestSize || foundBest.HierachyDepth > best.HierachyDepth)
-                {
-                    best = foundBest;
-                    bestRect = foundBestRect;
-                    bestSize = foundBestSize;
-                }
+                foreach (var child in current.Children.Where(child => child.ActiveSelf).Reverse())
+                    traversal.Push(child);
             }
 
             return best;
