@@ -14,6 +14,9 @@ namespace BoundedUIX
     {
         private static readonly ConditionalWeakTable<RectTransform, OriginalRect> originalRects = new ConditionalWeakTable<RectTransform, OriginalRect>();
 
+        public static float GetArea(this float2 vector)
+            => vector.x * vector.y;
+
         public static BoundingBox GetGlobalBounds(this RectTransform rectTransform)
         {
             var area = rectTransform.ComputeGlobalComputeRect();

@@ -7,8 +7,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BoundedUIX
 {
@@ -17,28 +15,49 @@ namespace BoundedUIX
     {
         private static MethodInfo checkCanvasHitMethod = typeof(DevToolTipPatches).GetMethod(nameof(CheckCanvas), AccessTools.allDeclared);
         private static FieldInfo colliderField = typeof(RaycastHit).GetField("Collider", AccessTools.allDeclared);
-        private static MethodInfo getValueMethod = typeof(RaycastHit?).GetProperty("Value", AccessTools.allDeclared).GetMethod;
 
         private static Slot CheckCanvas(RaycastHit hit)
         {
-            var originalSlot = hit.Collider.Slot;
-            var slot = originalSlot;
+            var best = hit.Collider.Slot;
 
-            if (slot?.GetComponent<Canvas>() is Canvas canvas)
-                foreach (var rectTransform in canvas.Slot.GetComponentsInChildren<RectTransform>())
+            if (best?.GetComponent<Canvas>() != null && best?.GetComponent<RectTransform>() is RectTransform rectTransform)
+            {
+                best = FindBestFittingRect(hit.Point, best, rectTransform.GetGlobalBounds(), out _);
+
+                if (best.GetComponentInParents<Button>() is Button button && button.Slot.HierachyDepth > rectTransform.Slot.HierachyDepth)
+                    best = button.Slot;
+            }
+
+            return best;
+        }
+
+        private static Slot FindBestFittingRect(float3 hitPoint, Slot currentRoot, BoundingBox currentBounds, out RectTransform bestRect)
+        {
+            var best = currentRoot;
+            currentRoot.TryGetRectTransform(out bestRect);
+            var bestSize = bestRect.LocalComputeRect.size.GetArea();
+
+            foreach (var child in currentRoot.Children)
+            {
+                if (!child.TryGetRectTransform(out RectTransform rectTransform))
+                    continue;
+
+                var bounds = rectTransform.GetGlobalBounds();
+                if (!bounds.Contains(hitPoint))
+                    continue;
+
+                var foundBest = FindBestFittingRect(hitPoint, child, child.GetComponent<Mask>() != null ? rectTransform.GetGlobalBounds() : currentBounds, out var foundBestRect);
+                var foundBestSize = foundBestRect.LocalComputeRect.size.GetArea();
+
+                if (foundBestSize < bestSize || foundBest.HierachyDepth > best.HierachyDepth)
                 {
-                    var bounds = rectTransform.GetGlobalBounds();
-                    var enlargedBounds = bounds;
-                    enlargedBounds.Encapsulate(hit.Point);
-
-                    if (MathX.Approximately(bounds.Size, enlargedBounds.Size, .001f) && rectTransform.Slot.HierachyDepth > slot.HierachyDepth)
-                        slot = rectTransform.Slot;
+                    best = foundBest;
+                    bestRect = foundBestRect;
+                    bestSize = foundBestSize;
                 }
+            }
 
-            if (slot.GetComponentInParents<Button>() is Button button && button.Slot.HierachyDepth > originalSlot.HierachyDepth)
-                slot = button.Slot;
-
-            return slot;
+            return best;
         }
 
         [HarmonyTranspiler]
