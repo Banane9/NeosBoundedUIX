@@ -22,7 +22,7 @@ namespace BoundedUIX
             var center = rectTransform.GetGlobalBounds().Center;
             rectTransform.GetOriginal().Center = center;
 
-            __instance.Slot.GlobalPosition = center - .1f * rectTransform.Canvas.Slot.Forward;
+            __instance.Slot.GlobalPosition = center - BoundedUIX.GizmoOffset * rectTransform.Canvas.Slot.Forward;
             __instance.Slot.GlobalRotation = rectTransform.Canvas.Slot.GlobalRotation;
 
             return false;

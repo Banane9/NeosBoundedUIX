@@ -8,10 +8,11 @@ namespace BoundedUIX
 {
     public class BoundedUIX : NeosMod
     {
+        public const float GizmoOffset = .02f;
         public override string Author => "Banane9";
         public override string Link => "https://github.com/Banane9/NeosBoundedUIX";
         public override string Name => "BoundedUIX";
-        public override string Version => "2.2.1";
+        public override string Version => "2.2.2";
 
         public override void OnEngineInit()
         {

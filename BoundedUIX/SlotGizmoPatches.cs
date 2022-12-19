@@ -117,7 +117,7 @@ namespace BoundedUIX
             if (!target.TryGetMovableRectTransform(out var rectTransform))
                 return target.GlobalPosition;
 
-            return rectTransform.GetGlobalBounds().Center - .1f * rectTransform.Canvas.Slot.Forward;
+            return rectTransform.GetGlobalBounds().Center - BoundedUIX.GizmoOffset * rectTransform.Canvas.Slot.Forward;
         }
     }
 }
