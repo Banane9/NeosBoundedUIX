@@ -15,7 +15,7 @@ namespace BoundedUIX
         private static readonly ConditionalWeakTable<RectTransform, OriginalRect> originalRects = new ConditionalWeakTable<RectTransform, OriginalRect>();
 
         public static float GetArea(this float2 vector)
-            => vector.x * vector.y;
+                    => vector.x * vector.y;
 
         public static BoundingBox GetGlobalBounds(this RectTransform rectTransform)
         {
@@ -30,6 +30,15 @@ namespace BoundedUIX
 
         public static OriginalRect GetOriginal(this RectTransform rectTransform)
                     => originalRects.GetOrCreateValue(rectTransform);
+
+        public static void ResetTransform(this RectTransform rectTransform)
+        {
+            rectTransform.AnchorMin.Value = float2.Zero;
+            rectTransform.AnchorMax.Value = float2.One;
+            rectTransform.OffsetMin.Value = float2.Zero;
+            rectTransform.OffsetMax.Value = float2.Zero;
+            rectTransform.Pivot.Value = new(.5f, .5f);
+        }
 
         public static bool TryGetMovableRectTransform(this Slot slot, out RectTransform rectTransform)
             => slot.TryGetRectTransform(out rectTransform) && rectTransform.Slot != rectTransform.Canvas.Slot;

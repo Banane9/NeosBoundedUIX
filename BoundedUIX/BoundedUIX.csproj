@@ -9,6 +9,7 @@
     <RootNamespace>BoundedUIX</RootNamespace>
     <AssemblyName>BoundedUIX</AssemblyName>
     <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
+    <LangVersion>latestMajor</LangVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
     <TargetFrameworkProfile />
@@ -30,6 +31,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="0Harmony">
@@ -45,7 +47,7 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="FrooxEngine">
-      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\NeosVR\Neos_Data\Managed\FrooxEngine.dll</HintPath>
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\NeosVR\Neos_Data\Managed\Public\FrooxEngine.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="NeosModLoader">
@@ -62,13 +64,14 @@
     <Compile Include="DevToolTipPatches.cs" />
     <Compile Include="GizmoPatches.cs" />
     <Compile Include="PlaneTranslationGizmoPatches.cs" />
+    <Compile Include="RectTransformPatches.cs" />
     <Compile Include="ScaleGizmoPatches.cs" />
     <Compile Include="AxisTranslationGizmoPatches.cs" />
     <Compile Include="BoundedUIX.cs" />
     <Compile Include="OriginalRect.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Helpers.cs" />
-    <Compile Include="SceneInspectorPatches.cs" />
+    <Compile Include="SlotAddingPatches.cs" />
     <Compile Include="SlotGizmoPatches.cs" />
     <Compile Include="TranslationGizmoPatches.cs" />
   </ItemGroup>
