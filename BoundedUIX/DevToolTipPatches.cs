@@ -17,7 +17,7 @@ namespace BoundedUIX
         {
             var best = hit.Collider.Slot;
 
-            if (best?.GetComponent<Canvas>() != null && best?.GetComponent<RectTransform>() is RectTransform rectTransform)
+            if (BoundedUIX.EnableUIXSelection && best?.GetComponent<Canvas>() != null && best?.GetComponent<RectTransform>() is RectTransform rectTransform)
             {
                 best = FindBestRect(hit.Point, best);
 

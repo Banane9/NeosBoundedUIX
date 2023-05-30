@@ -14,7 +14,7 @@ namespace BoundedUIX
         [HarmonyPatch(nameof(PlaneTranslationGizmo.OnInteractionBegin))]
         private static void OnInteractionBeginPostfix(PlaneTranslationGizmo __instance)
         {
-            if (!__instance.TargetSlot.Target.TryGetMovableRectTransform(out var rectTransform))
+            if (!BoundedUIX.EnableUIXGizmos || !__instance.TargetSlot.Target.TryGetMovableRectTransform(out var rectTransform))
                 return;
 
             var originalTransform = rectTransform.GetOriginal();
@@ -41,7 +41,7 @@ namespace BoundedUIX
         private static bool UpdatePointPrefix(PlaneTranslationGizmo __instance, float3 localPoint)
         {
             var targetSlot = __instance.TargetSlot.Target;
-            if (!targetSlot.TryGetMovableRectTransform(out var rectTransform))
+            if (!BoundedUIX.EnableUIXGizmos || !targetSlot.TryGetMovableRectTransform(out var rectTransform))
                 return true;
 
             var offsetPoint = localPoint - __instance._pointOffset;

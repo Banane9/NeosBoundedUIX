@@ -59,7 +59,7 @@ namespace BoundedUIX
             }
 
             [HarmonyTranspiler]
-            [HarmonyPatch("OnAddChildPressed")]
+            [HarmonyPatch(nameof(SceneInspector.OnAddChildPressed))]
             private static IEnumerable<CodeInstruction> OnAddChildPressedTranspiler(IEnumerable<CodeInstruction> codeInstructions)
             {
                 return codeInstructions.PostfixToAddSlot(LoadFromSceneInspector, OnAddChildPostfix);
@@ -70,12 +70,12 @@ namespace BoundedUIX
                 if (targetSlot.TryGetMovableRectTransform(out var originalTransform))
                 {
                     newSlot.Name = BoundedUIX.ParentSlotName.Replace(BoundedUIX.TargetSlotNamePlaceholder, targetSlot.Name);
-                    var rectTransform = newSlot.AttachComponent<RectTransform>();
+                    var newTransform = newSlot.AttachComponent<RectTransform>();
 
                     if (BoundedUIX.MoveTransformToParent)
                     {
-                        originalTransform.CopyValues(rectTransform);
-                        rectTransform.ResetTransform();
+                        newTransform.CopyValues(originalTransform);
+                        originalTransform.ResetTransform();
                     }
                 }
 

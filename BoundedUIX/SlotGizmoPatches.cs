@@ -18,7 +18,7 @@ namespace BoundedUIX
 
         private static BoundingBox BoundUIX(BoundingBox bounds, Slot target, Slot space)
         {
-            if (!target.TryGetMovableRectTransform(out var rectTransform))
+            if (!BoundedUIX.EnableUIXGizmos || !target.TryGetMovableRectTransform(out var rectTransform))
                 return bounds;
 
             var area = rectTransform.ComputeGlobalComputeRect();
@@ -64,7 +64,7 @@ namespace BoundedUIX
             var moveableRect = __instance.TargetSlot.TryGetMovableRectTransform(out _);
 
             if (____buttonsSlot.Target.GetComponentInChildren<SlotGizmoButton>(button => button._worker.Target?.GetType() == RotationGizmoType) is SlotGizmoButton sgb)
-                sgb.Slot.ActiveSelf = !moveableRect;
+                sgb.Slot.ActiveSelf = !moveableRect || !BoundedUIX.EnableUIXGizmos;
         }
 
         [HarmonyPostfix]
@@ -77,18 +77,18 @@ namespace BoundedUIX
                 rectTransform.GetOriginal().Local = ____isLocalSpace.Value;
 
             if (____scaleGizmo.Target._zSlot.Target is Slot zSlot)
-                zSlot.ActiveSelf = !moveableRect;
+                zSlot.ActiveSelf = !moveableRect || !BoundedUIX.EnableUIXGizmos;
 
             // Hide blue z line of the gizmo
             if (____scaleGizmo.Target.Slot.GetComponent<MeshRenderer>(r => r.Materials[0] is OverlayFresnelMaterial material && material.FrontNearColor == color.Blue) is MeshRenderer renderer)
-                renderer.Enabled = !moveableRect;
+                renderer.Enabled = !moveableRect || !BoundedUIX.EnableUIXGizmos;
         }
 
         [HarmonyPostfix]
         [HarmonyPatch(nameof(SlotGizmo.SwitchSpace))]
         private static void SwitchSpacePostfix(TransformRelayRef ____targetSlot, Sync<bool> ____isLocalSpace, SyncRef<Slot> ____buttonsSlot, ref bool __state)
         {
-            if (!____targetSlot.Target.TryGetMovableRectTransform(out var rectTransform))
+            if (!BoundedUIX.EnableUIXGizmos || !____targetSlot.Target.TryGetMovableRectTransform(out var rectTransform))
                 return;
 
             // Restore true state to show the different icon
@@ -102,7 +102,7 @@ namespace BoundedUIX
         [HarmonyPatch(nameof(SlotGizmo.SwitchSpace))]
         private static void SwitchSpacePrefix(TransformRelayRef ____targetSlot, Sync<bool> ____isLocalSpace, ref bool __state)
         {
-            if (!____targetSlot.Target.TryGetMovableRectTransform(out _))
+            if (!BoundedUIX.EnableUIXGizmos || !____targetSlot.Target.TryGetMovableRectTransform(out _))
                 return;
 
             // Always let it set local space for the translation gizmos on rect transforms
@@ -112,7 +112,7 @@ namespace BoundedUIX
 
         private static float3 UIXBoundCenter(Slot target)
         {
-            if (!target.TryGetMovableRectTransform(out var rectTransform))
+            if (!BoundedUIX.EnableUIXGizmos || !target.TryGetMovableRectTransform(out var rectTransform))
                 return target.GlobalPosition;
 
             return rectTransform.GetGlobalBounds().Center - BoundedUIX.GizmoOffset * rectTransform.Canvas.Slot.Forward;

@@ -13,7 +13,7 @@ namespace BoundedUIX
         [HarmonyPatch(nameof(AxisTranslationGizmo.OnInteractionBegin))]
         private static void OnInteractionBeginPostfix(AxisTranslationGizmo __instance)
         {
-            if (!__instance.TargetSlot.Target.TryGetMovableRectTransform(out RectTransform rectTransform))
+            if (!BoundedUIX.EnableUIXGizmos || !__instance.TargetSlot.Target.TryGetMovableRectTransform(out RectTransform rectTransform))
                 return;
 
             var originalTransform = rectTransform.GetOriginal();
@@ -40,7 +40,7 @@ namespace BoundedUIX
         private static bool UpdatePointPrefix(AxisTranslationGizmo __instance, float3 localPoint)
         {
             var targetSlot = __instance.TargetSlot.Target;
-            if (!targetSlot.TryGetMovableRectTransform(out var rectTransform))
+            if (!BoundedUIX.EnableUIXGizmos || !targetSlot.TryGetMovableRectTransform(out var rectTransform))
                 return true;
 
             var offsetPoint = localPoint - __instance._pointOffset;

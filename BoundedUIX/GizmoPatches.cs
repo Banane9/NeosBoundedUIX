@@ -16,7 +16,7 @@ namespace BoundedUIX
         [HarmonyPatch(nameof(Gizmo.PositionAtTarget))]
         private static bool PositionAtTargetPrefix(Gizmo __instance)
         {
-            if (!__instance.TargetSlot.Target.TryGetMovableRectTransform(out var rectTransform))
+            if (!BoundedUIX.EnableUIXGizmos || !__instance.TargetSlot.Target.TryGetMovableRectTransform(out var rectTransform))
                 return true;
 
             var center = rectTransform.GetGlobalBounds().Center;
