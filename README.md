@@ -1,8 +1,11 @@
 Bounded UIX
 ===========
 
-A [NeosModLoader](https://github.com/zkxs/NeosModLoader) mod for [Neos VR](https://neos.com/) that makes UIX elements editable with the usual Slot gizmos,
+A [NeosModLoader](https://github.com/zkxs/NeosModLoader) mod for [Neos VR](https://neos.com/) that makes UIX elements selectable and editable with the usual Slot gizmos,
 as well as fixing UIX elements breaking when a parent is inserted.
+
+Selection, Gizmo and Slot creation behavior, as well as the names of newly inserted slots can be modified in the settings.  
+Using the Create Pivot at Center button on Slots will create a parent with a point-anchor and symmetrical offsets to achieve the size.
 
 ## Installation
 1. Install [NeosModLoader](https://github.com/zkxs/NeosModLoader).
