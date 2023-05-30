@@ -13,7 +13,7 @@ namespace BoundedUIX
     internal static class GizmoPatches
     {
         [HarmonyPrefix]
-        [HarmonyPatch("PositionAtTarget")]
+        [HarmonyPatch(nameof(Gizmo.PositionAtTarget))]
         private static bool PositionAtTargetPrefix(Gizmo __instance)
         {
             if (!__instance.TargetSlot.Target.TryGetMovableRectTransform(out var rectTransform))

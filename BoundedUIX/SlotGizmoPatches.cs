@@ -13,12 +13,6 @@ namespace BoundedUIX
     [HarmonyPatch(typeof(SlotGizmo))]
     internal static class SlotGizmoPatches
     {
-        private static readonly MethodInfo boundUIXMethod = typeof(SlotGizmoPatches).GetMethod(nameof(BoundUIX), AccessTools.allDeclared);
-
-        private static readonly MethodInfo computeBoundingBoxMethod = typeof(BoundsHelper).GetMethod("ComputeBoundingBox", AccessTools.allDeclared);
-
-        private static readonly MethodInfo getGlobalPositionMethod = typeof(Slot).GetProperty(nameof(Slot.GlobalPosition), AccessTools.allDeclared).GetMethod;
-
         private static readonly Type RotationGizmoType = typeof(RotationGizmo);
         private static readonly MethodInfo uixBoundCenterMethod = typeof(SlotGizmoPatches).GetMethod(nameof(UIXBoundCenter), AccessTools.allDeclared);
 
@@ -35,9 +29,13 @@ namespace BoundedUIX
         }
 
         [HarmonyTranspiler]
-        [HarmonyPatch("OnCommonUpdate")]
+        [HarmonyPatch(nameof(SlotGizmo.OnCommonUpdate))]
         private static IEnumerable<CodeInstruction> OnCommonUpdateTranspiler(IEnumerable<CodeInstruction> codeInstructions)
         {
+            var boundUIXMethod = typeof(SlotGizmoPatches).GetMethod(nameof(BoundUIX), AccessTools.allDeclared);
+            var computeBoundingBoxMethod = typeof(BoundsHelper).GetMethod(nameof(BoundsHelper.ComputeBoundingBox), AccessTools.allDeclared);
+            var getGlobalPositionMethod = typeof(Slot).GetProperty(nameof(Slot.GlobalPosition), AccessTools.allDeclared).GetMethod;
+
             var instructions = codeInstructions.ToList();
 
             var globalPositionIndex = instructions.FindIndex(instruction => instruction.Calls(getGlobalPositionMethod));
@@ -60,17 +58,17 @@ namespace BoundedUIX
         }
 
         [HarmonyPostfix]
-        [HarmonyPatch("RegenerateButtons")]
+        [HarmonyPatch(nameof(SlotGizmo.RegenerateButtons))]
         private static void RegenerateButtonsPostfix(SlotGizmo __instance, SyncRef<Slot> ____buttonsSlot)
         {
             var moveableRect = __instance.TargetSlot.TryGetMovableRectTransform(out _);
 
-            if (____buttonsSlot.Target.GetComponentInChildren<SlotGizmoButton>(button => ((SyncRef<Worker>)button.TryGetField("_worker")).Target?.GetType() == RotationGizmoType) is SlotGizmoButton sgb)
+            if (____buttonsSlot.Target.GetComponentInChildren<SlotGizmoButton>(button => button._worker.Target?.GetType() == RotationGizmoType) is SlotGizmoButton sgb)
                 sgb.Slot.ActiveSelf = !moveableRect;
         }
 
         [HarmonyPostfix]
-        [HarmonyPatch("Setup")]
+        [HarmonyPatch(nameof(SlotGizmo.Setup))]
         private static void SetupPostfix(TransformRelayRef ____targetSlot, Sync<bool> ____isLocalSpace, SyncRef<ScaleGizmo> ____scaleGizmo)
         {
             var moveableRect = ____targetSlot.Target.TryGetMovableRectTransform(out var rectTransform);
@@ -78,8 +76,8 @@ namespace BoundedUIX
             if (moveableRect)
                 rectTransform.GetOriginal().Local = ____isLocalSpace.Value;
 
-            if (____scaleGizmo.Target.TryGetField("_zSlot") is SyncRef<Slot> zSlot)
-                zSlot.Target.ActiveSelf = !moveableRect;
+            if (____scaleGizmo.Target._zSlot.Target is Slot zSlot)
+                zSlot.ActiveSelf = !moveableRect;
 
             // Hide blue z line of the gizmo
             if (____scaleGizmo.Target.Slot.GetComponent<MeshRenderer>(r => r.Materials[0] is OverlayFresnelMaterial material && material.FrontNearColor == color.Blue) is MeshRenderer renderer)
@@ -87,7 +85,7 @@ namespace BoundedUIX
         }
 
         [HarmonyPostfix]
-        [HarmonyPatch("SwitchSpace")]
+        [HarmonyPatch(nameof(SlotGizmo.SwitchSpace))]
         private static void SwitchSpacePostfix(TransformRelayRef ____targetSlot, Sync<bool> ____isLocalSpace, SyncRef<Slot> ____buttonsSlot, ref bool __state)
         {
             if (!____targetSlot.Target.TryGetMovableRectTransform(out var rectTransform))
@@ -101,7 +99,7 @@ namespace BoundedUIX
         }
 
         [HarmonyPrefix]
-        [HarmonyPatch("SwitchSpace")]
+        [HarmonyPatch(nameof(SlotGizmo.SwitchSpace))]
         private static void SwitchSpacePrefix(TransformRelayRef ____targetSlot, Sync<bool> ____isLocalSpace, ref bool __state)
         {
             if (!____targetSlot.Target.TryGetMovableRectTransform(out _))

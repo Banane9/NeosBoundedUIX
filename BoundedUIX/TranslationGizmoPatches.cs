@@ -13,7 +13,7 @@ namespace BoundedUIX
     internal static class TranslationGizmoPatches
     {
         [HarmonyPostfix]
-        [HarmonyPatch("SetTarget")]
+        [HarmonyPatch(nameof(TranslationGizmo.SetTarget))]
         private static void SetTargetPostfix(TranslationGizmo __instance, Slot slot)
         {
             var moveableRect = slot.TryGetMovableRectTransform(out _);

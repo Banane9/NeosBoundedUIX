@@ -11,7 +11,7 @@ namespace BoundedUIX
     internal static class PlaneTranslationGizmoPatches
     {
         [HarmonyPostfix]
-        [HarmonyPatch("OnInteractionBegin")]
+        [HarmonyPatch(nameof(PlaneTranslationGizmo.OnInteractionBegin))]
         private static void OnInteractionBeginPostfix(PlaneTranslationGizmo __instance)
         {
             if (!__instance.TargetSlot.Target.TryGetMovableRectTransform(out var rectTransform))
@@ -37,14 +37,14 @@ namespace BoundedUIX
         }
 
         [HarmonyPrefix]
-        [HarmonyPatch("UpdatePoint")]
-        private static bool UpdatePointPrefix(PlaneTranslationGizmo __instance, float3 localPoint, float3 ____pointOffset, SyncRef<SegmentMesh> ____line0, SyncRef<SegmentMesh> ____line1)
+        [HarmonyPatch(nameof(PlaneTranslationGizmo.UpdatePoint))]
+        private static bool UpdatePointPrefix(PlaneTranslationGizmo __instance, float3 localPoint)
         {
             var targetSlot = __instance.TargetSlot.Target;
             if (!targetSlot.TryGetMovableRectTransform(out var rectTransform))
                 return true;
 
-            var offsetPoint = localPoint - ____pointOffset;
+            var offsetPoint = localPoint - __instance._pointOffset;
             var projectedPoint = MathX.Reject(offsetPoint, __instance.LocalNormal);
             projectedPoint = __instance.Slot.LocalPointToGlobal(projectedPoint);
             projectedPoint = __instance.PointSpace.Space.GlobalPointToLocal(projectedPoint);
@@ -72,9 +72,9 @@ namespace BoundedUIX
             }
 
             var line = MathX.Project(localPoint, __instance.LocalNormal);
-            ____line0.Target.PointB.Value = line;
-            ____line1.Target.PointA.Value = line;
-            ____line1.Target.PointB.Value = float3.Zero;
+            __instance._line0.Target.PointB.Value = line;
+            __instance._line1.Target.PointA.Value = line;
+            __instance._line1.Target.PointB.Value = float3.Zero;
 
             return false;
         }

@@ -13,11 +13,6 @@ namespace BoundedUIX
     [HarmonyPatch(typeof(DevToolTip))]
     internal static class DevToolTipPatches
     {
-        private static readonly MethodInfo checkCanvasHitMethod = typeof(DevToolTipPatches).GetMethod(nameof(CheckCanvas), AccessTools.allDeclared);
-        private static readonly FieldInfo colliderField = typeof(RaycastHit).GetField("Collider", AccessTools.allDeclared);
-
-        private static readonly FieldInfo graphicField = typeof(RectTransform).GetField("_graphic", AccessTools.allDeclared);
-
         private static Slot CheckCanvas(RaycastHit hit)
         {
             var best = hit.Collider.Slot;
@@ -47,7 +42,7 @@ namespace BoundedUIX
                     continue;
 
                 var isHit = rectTransform.GetGlobalBounds().Contains(hitPoint);
-                var hasGraphic = graphicField.GetValue(rectTransform) != null;
+                var hasGraphic = rectTransform.Graphic != null;
 
                 if (isHit && hasGraphic && (!rectTransform.IsMask || rectTransform.IsMaskVisible))
                     best = current;
@@ -63,9 +58,12 @@ namespace BoundedUIX
         }
 
         [HarmonyTranspiler]
-        [HarmonyPatch("TryOpenGizmo")]
+        [HarmonyPatch(nameof(DevToolTip.TryOpenGizmo))]
         private static IEnumerable<CodeInstruction> TryOpenGizmoTranspiler(IEnumerable<CodeInstruction> codeInstructions)
         {
+            var checkCanvasHitMethod = typeof(DevToolTipPatches).GetMethod(nameof(CheckCanvas), AccessTools.allDeclared);
+            var colliderField = typeof(RaycastHit).GetField(nameof(RaycastHit.Collider), AccessTools.allDeclared);
+
             var instructions = codeInstructions.ToList();
             var raycastValueIndex = instructions.FindIndex(instruction => instruction.LoadsField(colliderField));
 

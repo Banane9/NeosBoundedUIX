@@ -10,7 +10,7 @@ namespace BoundedUIX
     internal static class ScaleGizmoPatches
     {
         [HarmonyPostfix]
-        [HarmonyPatch("OnInteractionBegin")]
+        [HarmonyPatch(nameof(ScaleGizmo.OnInteractionBegin))]
         private static void OnInteractionBeginPostfix(ScaleGizmo __instance)
         {
             if (!__instance.TargetSlot.Target.TryGetMovableRectTransform(out RectTransform rectTransform))
@@ -36,7 +36,7 @@ namespace BoundedUIX
         }
 
         [HarmonyPostfix]
-        [HarmonyPatch("UpdatePoint")]
+        [HarmonyPatch(nameof(ScaleGizmo.UpdatePoint))]
         private static void UpdatePointPostfix(ScaleGizmo __instance)
         {
             var targetSlot = __instance.TargetSlot.Target;
