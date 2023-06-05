@@ -44,7 +44,7 @@ namespace BoundedUIX
         public override string Author => "Banane9";
         public override string Link => "https://github.com/Banane9/NeosBoundedUIX";
         public override string Name => "BoundedUIX";
-        public override string Version => "2.3.0";
+        public override string Version => "2.3.1";
 
         public override void OnEngineInit()
         {

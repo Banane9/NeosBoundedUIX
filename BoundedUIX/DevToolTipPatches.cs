@@ -33,7 +33,7 @@ namespace BoundedUIX
             var traversal = new Stack<Slot>();
             traversal.Push(root);
 
-            Slot best = null;
+            var best = root;
             while (traversal.Count > 0)
             {
                 var current = traversal.Pop();
