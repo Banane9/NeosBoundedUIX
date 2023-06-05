@@ -25,6 +25,9 @@ namespace BoundedUIX
         private static readonly ModConfigurationKey<float> gizmoOffsetKey = new("GizmoOffset", "Distance to raise the movement gizmos from the surface of the canvas. World scale.", () => 0.02f, valueValidator: v => v >= 0);
 
         [AutoRegisterConfigKey]
+        private static readonly ModConfigurationKey<bool> ignoreAlreadySelectedKey = new("IgnoreAlreadySelected", "Skip already selected elements in the targeting process. Helps with layered elements.", () => true);
+
+        [AutoRegisterConfigKey]
         private static readonly ModConfigurationKey<bool> moveTransformToParentKey = new("MoveTransformToParent", "Move RectTransform values up when creating a parent (analog to Slot transforms).", () => true);
 
         [AutoRegisterConfigKey]
@@ -33,18 +36,23 @@ namespace BoundedUIX
         [AutoRegisterConfigKey]
         private static readonly ModConfigurationKey<string> pivotSlotNameKey = new("PivotSlotName", "Default name for pivot Slots in UIX hierarchies. Use {TargetName} to get the child-to-be's name.", () => "{TargetName} Space", valueValidator: name => !string.IsNullOrWhiteSpace(name));
 
+        [AutoRegisterConfigKey]
+        private static readonly ModConfigurationKey<bool> prioritizeHierarchyDepthKey = new("PrioritizeHierarchyDepth", "Prioritize the hierarchy depth of a potentially hit RectTransform over the layout order. Can help instead of or in addition to skipping already selected elements.", () => false);
+
         public static string ChildSlotName => Config.GetValue(childSlotNameKey);
         public static bool EnableUIXGizmos => Config.GetValue(enableUIXGizmosKey);
         public static bool EnableUIXSelection => Config.GetValue(enableUIXSelectionKey);
         public static float GizmoOffset => Config.GetValue(gizmoOffsetKey);
+        public static bool IgnoreAlreadySelected => Config.GetValue(ignoreAlreadySelectedKey);
         public static bool MoveTransformToParent => Config.GetValue(moveTransformToParentKey);
         public static string ParentSlotName => Config.GetValue(parentSlotNameKey);
         public static string PivotSlotName => Config.GetValue(pivotSlotNameKey);
+        public static bool PrioritizeHierarchyDepth => Config.GetValue(prioritizeHierarchyDepthKey);
 
         public override string Author => "Banane9";
         public override string Link => "https://github.com/Banane9/NeosBoundedUIX";
         public override string Name => "BoundedUIX";
-        public override string Version => "2.3.1";
+        public override string Version => "2.4.0";
 
         public override void OnEngineInit()
         {

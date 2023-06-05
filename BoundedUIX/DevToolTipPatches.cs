@@ -15,25 +15,27 @@ namespace BoundedUIX
     {
         private static Slot CheckCanvas(RaycastHit hit)
         {
-            var best = hit.Collider.Slot;
+            var bestSlot = hit.Collider.Slot;
 
-            if (BoundedUIX.EnableUIXSelection && best?.GetComponent<Canvas>() != null && best?.GetComponent<RectTransform>() is RectTransform rectTransform)
+            if (BoundedUIX.EnableUIXSelection && bestSlot.TryGetRectTransform(out var rectTransform) && rectTransform.Canvas.Slot == bestSlot)
             {
-                best = FindBestRect(hit.Point, best);
+                bestSlot = FindBestRect(bestSlot.GlobalPointToLocal(hit.Point).xy, bestSlot);
 
-                if (best.GetComponentInParents<Button>() is Button button && button.Slot.HierachyDepth > rectTransform.Slot.HierachyDepth)
-                    best = button.Slot;
+                if (bestSlot.GetComponentInParents<Button>() is Button button && button.Slot.HierachyDepth > rectTransform.Slot.HierachyDepth)
+                    bestSlot = button.Slot;
             }
 
-            return best;
+            return bestSlot;
         }
 
-        private static Slot FindBestRect(float3 hitPoint, Slot root)
+        private static Slot FindBestRect(float2 hitPoint, Slot best)
         {
-            var traversal = new Stack<Slot>();
-            traversal.Push(root);
+            var prioritizeDepth = BoundedUIX.PrioritizeHierarchyDepth;
+            var ignoreSelected = BoundedUIX.IgnoreAlreadySelected;
 
-            var best = root;
+            var traversal = new Stack<Slot>();
+            traversal.Push(best);
+
             while (traversal.Count > 0)
             {
                 var current = traversal.Pop();
@@ -41,10 +43,12 @@ namespace BoundedUIX
                 if (!current.TryGetRectTransform(out var rectTransform))
                     continue;
 
-                var isHit = rectTransform.GetGlobalBounds().Contains(hitPoint);
+                var isHit = rectTransform.GetCanvasBounds().Contains(hitPoint);
                 var hasGraphic = rectTransform.Graphic != null;
 
-                if (isHit && hasGraphic && (!rectTransform.IsMask || rectTransform.IsMaskVisible))
+                if (isHit && hasGraphic && (!rectTransform.IsMask || rectTransform.IsMaskVisible)   // Has anything possibly visible in the bounds
+                 && (!ignoreSelected || current.TryGetGizmo<SlotGizmo>() == null)                   // Not already selected - to help when something's in the way
+                 && (!prioritizeDepth || best.HierachyDepth <= current.HierachyDepth))              // Hierarchy depth at least as deep when prioritizing
                     best = current;
 
                 if (rectTransform.IsMask && (!isHit || !hasGraphic))

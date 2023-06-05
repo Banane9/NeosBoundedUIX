@@ -12,10 +12,21 @@ namespace BoundedUIX
 {
     internal static class Helpers
     {
-        private static readonly ConditionalWeakTable<RectTransform, OriginalRect> originalRects = new ConditionalWeakTable<RectTransform, OriginalRect>();
+        private static readonly ConditionalWeakTable<RectTransform, OriginalRect> originalRects = new();
 
-        public static float GetArea(this float2 vector)
-                    => vector.x * vector.y;
+        public static bool Contains(this BoundingBox2D boundingBox, float2 point)
+            => (point >= boundingBox.Min).All() && (point <= boundingBox.Max).All();
+
+        public static BoundingBox2D GetCanvasBounds(this RectTransform rectTransform)
+        {
+            var area = rectTransform.ComputeGlobalComputeRect();
+
+            var bounds = BoundingBox2D.Empty();
+            bounds.Encapsulate(area.ExtentMin / rectTransform.Canvas.UnitScale);
+            bounds.Encapsulate(area.ExtentMax / rectTransform.Canvas.UnitScale);
+
+            return bounds;
+        }
 
         public static BoundingBox GetGlobalBounds(this RectTransform rectTransform)
         {

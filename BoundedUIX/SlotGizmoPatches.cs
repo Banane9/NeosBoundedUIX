@@ -14,7 +14,6 @@ namespace BoundedUIX
     internal static class SlotGizmoPatches
     {
         private static readonly Type RotationGizmoType = typeof(RotationGizmo);
-        private static readonly MethodInfo uixBoundCenterMethod = typeof(SlotGizmoPatches).GetMethod(nameof(UIXBoundCenter), AccessTools.allDeclared);
 
         private static BoundingBox BoundUIX(BoundingBox bounds, Slot target, Slot space)
         {
@@ -35,6 +34,7 @@ namespace BoundedUIX
             var boundUIXMethod = typeof(SlotGizmoPatches).GetMethod(nameof(BoundUIX), AccessTools.allDeclared);
             var computeBoundingBoxMethod = typeof(BoundsHelper).GetMethod(nameof(BoundsHelper.ComputeBoundingBox), AccessTools.allDeclared);
             var getGlobalPositionMethod = typeof(Slot).GetProperty(nameof(Slot.GlobalPosition), AccessTools.allDeclared).GetMethod;
+            var uixBoundCenterMethod = typeof(SlotGizmoPatches).GetMethod(nameof(UIXBoundCenter), AccessTools.allDeclared);
 
             var instructions = codeInstructions.ToList();
 
