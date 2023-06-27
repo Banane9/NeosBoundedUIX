@@ -49,7 +49,7 @@ namespace BoundedUIX
 
             private static Slot OnAddChildPostfix(Slot newSlot, Slot targetSlot)
             {
-                if (targetSlot.TryGetMovableRectTransform(out _))
+                if (targetSlot.TryGetRectTransform(out _))
                 {
                     newSlot.Name = BoundedUIX.ChildSlotName.Replace(BoundedUIX.TargetSlotNamePlaceholder, targetSlot.Name);
                     newSlot.AttachComponent<RectTransform>();
